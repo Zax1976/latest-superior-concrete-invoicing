@@ -1,0 +1,48 @@
+{
+  "name": "J. Stark Business Invoicing",
+  "short_name": "J. Stark Invoice",
+  "description": "Professional invoicing system for Superior Concrete Leveling and J. Stark Masonry",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0B1F3A",
+  "theme_color": "#DC143C",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/u294xgL.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.imgur.com/u294xgL.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "features": [
+    "offline",
+    "calculator",
+    "pdf-export",
+    "local-storage"
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshot-narrow.png", 
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
