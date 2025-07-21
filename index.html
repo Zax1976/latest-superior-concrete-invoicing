@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J. Stark Business Invoicing System</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Mobile optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="J. Stark Invoice">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/u294xgL.png">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/u294xgL.png">
+    
+    <!-- Android Chrome -->
+    <meta name="theme-color" content="#DC143C">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- EmailJS for email sending -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="https://i.imgur.com/u294xgL.png" alt="J. Stark Business Logo" class="company-logo">
+                    <div class="company-info">
+                        <h1>J. Stark Business Invoicing</h1>
+                        <p>Superior Concrete Leveling & J. Stark Masonry</p>
+                    </div>
+                </div>
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-actions" id="header-actions">
+                    <button id="new-invoice-btn" class="btn btn-primary btn-large">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Create New Invoice</span>
+                    </button>
+                    <button id="view-invoices-btn" class="btn btn-secondary btn-large">
+                        <i class="fas fa-folder-open"></i>
+                        <span>View All Invoices</span>
+                    </button>
+                    <button id="email-settings-btn" class="btn btn-outline btn-large" onclick="showEmailSettings()">
+                        <i class="fas fa-cog"></i>
+                        <span>Email Settings</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard" class="view active">
+                <div class="dashboard-header">
+                    <h2>Home Screen</h2>
+                    <p>Create and manage invoices for your concrete and masonry jobs</p>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-invoices">0</h3>
+                            <p>Total Jobs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-revenue">$0.00</h3>
+                            <p>Total Earned</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-pending">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pending-invoices">0</h3>
+                            <p>Waiting for Payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-paid">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="paid-invoices">0</h3>
+                            <p>Paid Jobs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Start a New Invoice</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn concrete-btn large-action-btn" onclick="createNewInvoice('concrete')">
+                            <div class="action-icon">
+                                <i class="fas fa-road"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">Concrete Leveling</span>
+                                <span class="action-description">Driveways, Sidewalks, Patios</span>
+                            </div>
+                        </button>
+                        <button class="action-btn masonry-btn large-action-btn" onclick="createNewInvoice('masonry')">
+                            <div class="action-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">Masonry Work</span>
+                                <span class="action-description">Brick, Stone, Chimneys</span>
+                            </div>
+                        </button>
+                        <button class="action-btn quick-invoice-btn large-action-btn" onclick="createQuickInvoice()">
+                            <div class="action-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">Quick Invoice</span>
+                                <span class="action-description">Use last job as template</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="recent-invoices">
+                    <h3>Recent Invoices</h3>
+                    <div id="recent-invoices-list" class="invoices-list">
+                        <p class="empty-state">No invoices created yet. Create your first invoice above!</p>
+                    </div>
+                </div>
+                
+                <!-- Data Management Tools -->
+                <div class="data-management-section" style="margin-top: 2rem;">
+                    <h3>Data Management Tools</h3>
+                    <div class="data-tools-grid">
+                        <button class="data-tool-btn" onclick="App.exportToCSV()" title="Download all invoices as CSV">
+                            <i class="fas fa-file-csv"></i>
+                            <span>Export Invoices to CSV</span>
+                        </button>
+                        <button class="data-tool-btn" onclick="App.exportCustomersToCSV()" title="Download customer list as CSV">
+                            <i class="fas fa-users"></i>
+                            <span>Export Customers to CSV</span>
+                        </button>
+                        <button class="data-tool-btn" onclick="App.downloadBackup()" title="Download complete backup">
+                            <i class="fas fa-download"></i>
+                            <span>Download Backup</span>
+                        </button>
+                        <button class="data-tool-btn" onclick="App.showSettingsDialog()" title="Configure settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Cache Management (for debugging) -->
+                <div class="cache-management" style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; text-align: center;">
+                    <p style="margin-bottom: 0.5rem; color: #666; font-size: 0.875rem;">Having issues with old content?</p>
+                    <button class="btn btn-secondary btn-sm" onclick="CacheManager.forceUpdate()" style="font-size: 0.875rem; padding: 0.25rem 1rem;">
+                        <i class="fas fa-sync-alt"></i> Clear Cache & Reload
+                    </button>
+                </div>
+            </section>
+
+            <!-- Invoice Creation View -->
+            <section id="invoice-creation" class="view">
+                <div class="invoice-form-container">
+                    <div class="form-header">
+                        <h2>Create New Invoice</h2>
+                        <button class="btn btn-secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+
+                    <form id="invoice-form" class="invoice-form">
+                        <!-- Step Indicator -->
+                        <div class="step-indicator">
+                            <div class="step active" data-step="1">
+                                <span class="step-number">1</span>
+                                <span class="step-label">Choose Business</span>
+                            </div>
+                            <div class="step" data-step="2">
+                                <span class="step-number">2</span>
+                                <span class="step-label">Customer Info</span>
+                            </div>
+                            <div class="step" data-step="3">
+                                <span class="step-number">3</span>
+                                <span class="step-label">Add Services</span>
+                            </div>
+                            <div class="step" data-step="4">
+                                <span class="step-number">4</span>
+                                <span class="step-label">Review & Create</span>
+                            </div>
+                        </div>
+
+                        <!-- Company Selection -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-building"></i> Step 1: Which Business?</h3>
+                            <div class="business-selector">
+                                <label class="business-option">
+                                    <input type="radio" name="businessType" value="concrete" id="business-concrete">
+                                    <div class="business-card">
+                                        <i class="fas fa-road"></i>
+                                        <span class="business-name">Superior Concrete Leveling</span>
+                                        <span class="business-desc">Concrete lifting & leveling</span>
+                                    </div>
+                                </label>
+                                <label class="business-option">
+                                    <input type="radio" name="businessType" value="masonry" id="business-masonry">
+                                    <div class="business-card">
+                                        <i class="fas fa-home"></i>
+                                        <span class="business-name">J. Stark Masonry</span>
+                                        <span class="business-desc">Brick, stone & chimney work</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-user"></i> Step 2: Customer Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="customer-name">
+                                        Customer Name:
+                                        <span class="help-icon" data-tooltip="Enter the full name of your customer. This will appear on the invoice.">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="customer-name" name="customerName" required placeholder="John Smith">
+                                </div>
+                                <div class="form-group">
+                                    <label for="customer-email">Email:</label>
+                                    <input type="email" id="customer-email" name="customerEmail">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="customer-phone">Phone:</label>
+                                    <input type="tel" id="customer-phone" name="customerPhone">
+                                </div>
+                                <div class="form-group">
+                                    <label for="invoice-date">Invoice Date:</label>
+                                    <input type="date" id="invoice-date" name="invoiceDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="customer-address">Service Address:</label>
+                                <textarea id="customer-address" name="customerAddress" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Concrete Leveling Services -->
+                        <div id="concrete-services" class="form-section service-section" style="display: none;">
+                            <h3><i class="fas fa-road"></i> Step 3: Add Concrete Services</h3>
+                            
+                            <!-- Frequent Services Quick Add -->
+                            <div id="frequent-services-concrete" class="frequent-services-section" style="display: none;">
+                                <label>Quick Add Recent Services:</label>
+                                <div class="frequent-services-grid">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                            
+                            <div class="concrete-calculator">
+                                <div class="project-type-selector">
+                                    <label>Select Project Type:</label>
+                                    <div class="project-type-grid">
+                                        <button type="button" class="project-type-btn" data-type="driveway" data-rate="15.00">
+                                            <i class="fas fa-car"></i>
+                                            <span class="project-name">Driveway</span>
+                                            <span class="project-rate">$15/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="sidewalk" data-rate="12.00">
+                                            <i class="fas fa-walking"></i>
+                                            <span class="project-name">Sidewalk</span>
+                                            <span class="project-rate">$12/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="patio" data-rate="14.00">
+                                            <i class="fas fa-chair"></i>
+                                            <span class="project-name">Patio</span>
+                                            <span class="project-rate">$14/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="garage" data-rate="16.00">
+                                            <i class="fas fa-warehouse"></i>
+                                            <span class="project-name">Garage Floor</span>
+                                            <span class="project-rate">$16/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="basement" data-rate="18.00">
+                                            <i class="fas fa-home"></i>
+                                            <span class="project-name">Basement</span>
+                                            <span class="project-rate">$18/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="steps" data-rate="20.00">
+                                            <i class="fas fa-stairs"></i>
+                                            <span class="project-name">Steps</span>
+                                            <span class="project-rate">$20/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="pool-deck" data-rate="17.00">
+                                            <i class="fas fa-swimming-pool"></i>
+                                            <span class="project-name">Pool Deck</span>
+                                            <span class="project-rate">$17/sq ft</span>
+                                        </button>
+                                        <button type="button" class="project-type-btn" data-type="custom" data-rate="0.00">
+                                            <i class="fas fa-edit"></i>
+                                            <span class="project-name">Custom</span>
+                                            <span class="project-rate">Set rate</span>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="project-type" name="projectType">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="square-footage">
+                                            Square Footage:
+                                            <span class="help-icon" data-tooltip="Measure the total area to be leveled. Length × Width = Square Feet">
+                                                <i class="fas fa-question-circle"></i>
+                                            </span>
+                                        </label>
+                                        <input type="number" id="square-footage" name="squareFootage" min="1" step="0.1" placeholder="Enter square feet">
+                                        <span class="help-text">Example: 10ft × 20ft = 200 sq ft</span>
+                                    </div>
+                                </div>
+                                <div class="severity-access-section">
+                                    <div class="option-selector">
+                                        <label>Damage Severity:</label>
+                                        <div class="option-buttons">
+                                            <button type="button" class="option-btn severity-btn active" data-value="mild" data-multiplier="1.0">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>Mild</span>
+                                                <small>Normal pricing</small>
+                                            </button>
+                                            <button type="button" class="option-btn severity-btn" data-value="moderate" data-multiplier="1.3">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                <span>Moderate</span>
+                                                <small>+30%</small>
+                                            </button>
+                                            <button type="button" class="option-btn severity-btn" data-value="severe" data-multiplier="1.6">
+                                                <i class="fas fa-times-circle"></i>
+                                                <span>Severe</span>
+                                                <small>+60%</small>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="severity" name="severity" value="mild">
+                                    </div>
+                                    <div class="option-selector">
+                                        <label>Site Accessibility:</label>
+                                        <div class="option-buttons">
+                                            <button type="button" class="option-btn access-btn active" data-value="easy" data-multiplier="1.0">
+                                                <i class="fas fa-thumbs-up"></i>
+                                                <span>Easy</span>
+                                                <small>Normal pricing</small>
+                                            </button>
+                                            <button type="button" class="option-btn access-btn" data-value="moderate" data-multiplier="1.1">
+                                                <i class="fas fa-hand-paper"></i>
+                                                <span>Moderate</span>
+                                                <small>+10%</small>
+                                            </button>
+                                            <button type="button" class="option-btn access-btn" data-value="difficult" data-multiplier="1.25">
+                                                <i class="fas fa-mountain"></i>
+                                                <span>Difficult</span>
+                                                <small>+25%</small>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" id="accessibility" name="accessibility" value="easy">
+                                    </div>
+                                </div>
+                                <div class="form-group custom-rate" style="display: none;">
+                                    <label for="custom-rate">Custom Rate ($/sq ft):</label>
+                                    <input type="number" id="custom-rate" name="customRate" min="0" step="0.01">
+                                </div>
+                                <div class="calculation-display">
+                                    <div class="calc-row">
+                                        <span>Base Rate:</span>
+                                        <span id="base-rate-display">$0.00/sq ft</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span>Multipliers:</span>
+                                        <span id="multiplier-display">1.0x</span>
+                                    </div>
+                                    <div class="calc-row">
+                                        <span>Final Rate:</span>
+                                        <span id="final-rate-display">$0.00/sq ft</span>
+                                    </div>
+                                    <div class="calc-row total">
+                                        <span>Total Amount:</span>
+                                        <span id="concrete-total">$0.00</span>
+                                    </div>
+                                </div>
+                                <button type="button" id="add-concrete-service" class="btn btn-primary">
+                                    Add Service to Invoice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Masonry Services -->
+                        <div id="masonry-services" class="form-section service-section" style="display: none;">
+                            <h3><i class="fas fa-home"></i> Step 3: Add Masonry Services</h3>
+                            
+                            <!-- Frequent Services Quick Add -->
+                            <div id="frequent-services-masonry" class="frequent-services-section" style="display: none;">
+                                <label>Quick Add Recent Services:</label>
+                                <div class="frequent-services-grid">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                            
+                            <div class="masonry-services-list">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="masonry-service">Service Type:</label>
+                                        <select id="masonry-service" name="masonryService">
+                                            <option value="">Select service...</option>
+                                            <option value="brick-installation">Brick Installation</option>
+                                            <option value="brick-repair">Brick Repair</option>
+                                            <option value="stone-fireplace">Stone Fireplace</option>
+                                            <option value="chimney-repair">Chimney Repair</option>
+                                            <option value="chimney-restoration">Chimney Restoration</option>
+                                            <option value="outdoor-fireplace">Outdoor Fireplace</option>
+                                            <option value="patio-construction">Patio Construction</option>
+                                            <option value="fire-pit">Fire Pit Installation</option>
+                                            <option value="outdoor-kitchen">Outdoor Kitchen</option>
+                                            <option value="veneer-stone">Veneer Stone Installation</option>
+                                            <option value="cultured-stone">Cultured Stone Application</option>
+                                            <option value="custom">Custom Masonry Work</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="masonry-description">Description:</label>
+                                        <textarea id="masonry-description" name="masonryDescription" rows="2" placeholder="Describe the work to be performed..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="masonry-quantity">Quantity/Units:</label>
+                                        <input type="number" id="masonry-quantity" name="masonryQuantity" min="1" step="0.1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="masonry-unit">Unit Type:</label>
+                                        <select id="masonry-unit" name="masonryUnit">
+                                            <option value="sq ft">Square Feet</option>
+                                            <option value="linear ft">Linear Feet</option>
+                                            <option value="each">Each</option>
+                                            <option value="hour">Hours</option>
+                                            <option value="day">Days</option>
+                                            <option value="project">Project</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="masonry-rate">Rate per Unit:</label>
+                                        <input type="number" id="masonry-rate" name="masonryRate" min="0" step="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="masonry-total">Total Amount:</label>
+                                        <input type="number" id="masonry-total" name="masonryTotal" min="0" step="0.01" readonly>
+                                    </div>
+                                </div>
+                                <button type="button" id="add-masonry-service" class="btn btn-primary">
+                                    Add Service to Invoice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Services List -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-clipboard-list"></i> Step 4: Review Services</h3>
+                            <div id="services-list" class="services-list">
+                                <p class="empty-services">No services added yet. Add services using the sections above.</p>
+                            </div>
+                            <div class="invoice-totals">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span id="invoice-subtotal">$0.00</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Tax (8.25%):</span>
+                                    <span id="invoice-tax">$0.00</span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>Total:</span>
+                                    <span id="invoice-grand-total">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h3>Additional Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="invoice-status">Invoice Status:</label>
+                                    <select id="invoice-status" name="invoiceStatus">
+                                        <option value="draft">Draft</option>
+                                        <option value="sent">Sent</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="overdue">Overdue</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="invoice-notes">Notes/Terms:</label>
+                                <textarea id="invoice-notes" name="invoiceNotes" rows="4" placeholder="Payment terms, special instructions, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
+                            <button type="button" id="preview-invoice" class="btn btn-secondary">Preview</button>
+                            <button type="submit" class="btn btn-primary">Create Invoice</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Invoice Preview -->
+            <section id="invoice-preview" class="view">
+                <div class="preview-container">
+                    <div class="preview-header">
+                        <h2>Invoice Preview</h2>
+                        <div class="preview-actions">
+                            <button class="btn btn-secondary" onclick="editInvoice()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-primary" onclick="printInvoice()">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button class="btn btn-success" onclick="downloadPDF()">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                            <button class="btn btn-info" onclick="emailInvoice()">
+                                <i class="fas fa-paper-plane"></i> Email Invoice
+                            </button>
+                        </div>
+                    </div>
+                    <div id="invoice-preview-content" class="invoice-document">
+                        <!-- Invoice content will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Invoice List View -->
+            <section id="invoice-list" class="view">
+                <div class="list-header">
+                    <h2>All Invoices</h2>
+                    <div class="list-actions">
+                        <div class="search-container">
+                            <input type="search" id="search-invoices" placeholder="Search invoices by customer, number, or description..." autocomplete="off" data-search-type="invoices">
+                            <button type="button" id="clear-search" class="clear-search-btn" title="Clear search" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <select id="filter-status">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="paid">Paid</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="createNewInvoice()">
+                            <i class="fas fa-plus"></i> New Invoice
+                        </button>
+                    </div>
+                </div>
+                <div id="invoices-table-container" class="table-container">
+                    <table id="invoices-table" class="invoices-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Business</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-table-body">
+                            <tr>
+                                <td colspan="7" class="empty-table">No invoices found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+    
+    <!-- Menu Overlay -->
+    <div class="menu-overlay" id="menu-overlay" onclick="toggleMobileMenu()"></div>
+    
+
+    <!-- Scripts -->
+    <script src="js/security.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/invoice.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/email.js"></script>
+    <script src="js/cache-manager.js"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+        // Register service worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                        
+                        // Listen for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    if (confirm('New version available! Reload to update?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+        
+        // Handle PWA install prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show custom install button
+            const installButton = document.createElement('button');
+            installButton.textContent = '📱 Install App';
+            installButton.className = 'btn btn-secondary';
+            installButton.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            `;
+            
+            installButton.addEventListener('click', function() {
+                installButton.style.display = 'none';
+                deferredPrompt.prompt();
+                
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+            
+            document.body.appendChild(installButton);
+        });
+        
+        // Handle app installation
+        window.addEventListener('appinstalled', function(evt) {
+            console.log('App was installed');
+            if (window.App) {
+                window.App.showSuccess('App installed successfully! You can now use it offline.');
+            }
+        });
+        
+        // Handle online/offline status
+        window.addEventListener('online', function() {
+            console.log('Back online');
+            if (window.App) {
+                window.App.showSuccess('Back online! Data will sync automatically.');
+            }
+        });
+        
+        window.addEventListener('offline', function() {
+            console.log('Gone offline');
+            if (window.App) {
+                window.App.showSuccess('Offline mode: You can continue working. Data will sync when reconnected.');
+            }
+        });
+    </script>
+</body>
+</html>
