@@ -1,0 +1,148 @@
+/**
+ * Estimate Service Display CSS
+ * Ensures estimate services are properly displayed
+ */
+
+/* Services list styling */
+#estimate-services-list {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    min-height: 60px;
+}
+
+#estimate-services-list h4 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+#estimate-services-list .empty-services {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+}
+
+#estimate-services-list .service-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+#estimate-services-list .service-item:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#estimate-services-list .service-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#estimate-services-list .service-description {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+#estimate-services-list .service-type {
+    font-size: 0.9em;
+    color: #6c757d;
+    text-transform: capitalize;
+}
+
+#estimate-services-list .service-price {
+    font-weight: bold;
+    color: #28a745;
+    margin: 0 15px;
+    font-size: 1.1em;
+}
+
+#estimate-services-list .remove-service {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+/* Service entry form styling */
+.service-entry-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.concrete-estimate-section h4,
+.masonry-estimate-section h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.section-description {
+    color: #6c757d;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+}
+
+/* Success animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.service-item {
+    animation: slideIn 0.3s ease;
+}
+
+/* Make sure services section is visible */
+.estimate-services-content {
+    display: block !important;
+    min-height: 200px;
+}
+
+/* Totals section */
+.estimate-totals {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.estimate-totals .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.estimate-totals .total-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #333;
+    padding-top: 12px;
+}
+
+.estimate-totals .total-label {
+    color: #6c757d;
+}
+
+.estimate-totals .total-value {
+    color: #333;
+    font-weight: 500;
+}
