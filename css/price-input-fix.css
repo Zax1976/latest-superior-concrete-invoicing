@@ -1,0 +1,97 @@
+/**
+ * Price Input Fix - Prevents dollar sign from covering first digit
+ * Applied to all price/currency input fields across the application
+ */
+
+/* General fix for all price inputs */
+input[type="number"][id*="price"],
+input[type="number"][id*="cost"],
+input[type="number"][id*="rate"],
+input[type="number"][id*="amount"],
+input[type="number"][data-validate="currency"],
+input.price-input,
+.input-with-currency input[type="number"] {
+    padding-left: 3rem !important; /* Ensure enough space for $ symbol */
+    font-family: 'Courier New', monospace; /* Better number alignment */
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Fix the dollar sign positioning */
+.input-with-currency .currency-symbol,
+.currency-symbol {
+    position: absolute;
+    left: 1rem !important;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+
+/* Ensure parent container is positioned correctly */
+.input-with-currency {
+    position: relative !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Specific fixes for known problematic fields */
+#masonry-job-price,
+#concrete-service-price,
+#estimate-masonry-rate,
+#estimate-concrete-price,
+#masonry-rate,
+#concrete-rate {
+    padding-left: 3rem !important;
+}
+
+/* Fix for estimate fields */
+.estimate-form input[type="number"][id*="price"],
+.estimate-form input[type="number"][id*="rate"] {
+    padding-left: 3rem !important;
+}
+
+/* Fix for invoice fields */
+.invoice-form input[type="number"][id*="price"],
+.invoice-form input[type="number"][id*="rate"] {
+    padding-left: 3rem !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    input[type="number"][id*="price"],
+    input[type="number"][id*="cost"],
+    input[type="number"][id*="rate"] {
+        padding-left: 2.5rem !important;
+        font-size: 1rem;
+    }
+    
+    .currency-symbol {
+        left: 0.75rem !important;
+        font-size: 0.9rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .currency-symbol {
+        color: #374151;
+        font-weight: 700;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .currency-symbol {
+        color: #9ca3af;
+    }
+    
+    input[type="number"][id*="price"] {
+        background-color: #374151;
+        color: #f3f4f6;
+    }
+}
