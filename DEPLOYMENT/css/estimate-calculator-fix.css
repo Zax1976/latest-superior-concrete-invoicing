@@ -1,0 +1,104 @@
+/* Fix for estimate calculator price radio buttons being unclickable */
+/* The parent had pointer-events: none which was blocking all clicks */
+/* er-calculator-styles.css sets .price-selection to pointer-events: none */
+
+#estimate-calc-results {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto !important; /* Ensure container allows events */
+}
+
+#estimate-calc-results .price-selection,
+#estimate-er-poly-calculator .price-selection,
+.er-poly-calculator .price-selection {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important; /* Override er-calculator-styles.css */
+    opacity: 1 !important; /* Override opacity: 0.5 from er-calculator-styles.css */
+}
+
+#estimate-calc-results .price-options {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto !important; /* Ensure options container allows events */
+}
+
+#estimate-calc-results .price-option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important; /* Override any parent pointer-events: none */
+}
+
+#estimate-calc-results .price-option:hover {
+    background: #f0f0f0;
+    border-color: #007bff;
+}
+
+#estimate-calc-results .price-option input[type="radio"] {
+    position: relative;
+    z-index: 11;
+    margin-right: 10px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    pointer-events: auto !important; /* Ensure radio is clickable */
+}
+
+#estimate-calc-results .price-option input[type="radio"]:not(:disabled) {
+    pointer-events: auto !important;
+}
+
+#estimate-calc-results .price-label {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    /* Removed pointer-events: none - this was causing issues */
+    pointer-events: auto !important;
+}
+
+#estimate-calc-results .price-option.selected,
+#estimate-calc-results .price-option:has(input:checked) {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+/* Ensure calculator results don't overlap other elements */
+.calculator-results {
+    margin-bottom: 20px;
+    overflow: visible;
+}
+
+/* Custom price input wrapper */
+#estimate-custom-price-wrapper {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+#estimate-custom-price-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Make sure the use calculated price button is accessible */
+#estimate-use-calculated-price {
+    position: relative;
+    z-index: 10;
+    margin-top: 15px;
+}

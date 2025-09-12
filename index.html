@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J. Stark Business Invoicing System</title>
+    
+    <!-- PWA Manifest -->
+    <!-- === SAFE-HOTFIX: PWA_OPT_OUT (BEGIN) -->
+    <!-- Conditionally load manifest to avoid 404 in dev -->
+    <script>
+    (function() {
+        // Only add manifest link if it exists
+        fetch('manifest.json', { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    const link = document.createElement('link');
+                    link.rel = 'manifest';
+                    link.href = 'manifest.json';
+                    document.head.appendChild(link);
+                }
+            })
+            .catch(() => {
+                console.log('[PWA:DISABLED] missing manifest/service worker (dev mode)');
+            });
+    })();
+    </script>
+    <!-- === SAFE-HOTFIX: PWA_OPT_OUT (END) -->
+    
+    <!-- Mobile optimizations -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="J. Stark Invoice">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/u294xgL.png">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/u294xgL.png">
+    
+    <!-- Android Chrome -->
+    <meta name="theme-color" content="#DC143C">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/price-input-fix.css">
+    <link rel="stylesheet" href="css/estimate-service-display.css">
+    <link rel="stylesheet" href="css/er-calculator-styles.css">
+    <link rel="stylesheet" href="css/slab-forms.css">
+    <link rel="stylesheet" href="css/use-selected-price-fix.css">
+    <!-- Mobile Responsive Fix - Must load after main styles -->
+    <link rel="stylesheet" href="css/mobile-responsive-fix.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    <link rel="stylesheet" href="css/warranty-page.css" media="print">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- EmailJS for email sending -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    
+</head>
+<body>
+    <!-- VERSION 9.2 ESTIMATE CALCULATION FIX - 2025-01-10 -->
+    <script>
+    // Force version update
+    window.APP_VERSION = 'VERSION-9.2-ESTIMATE-CALC-FIX-' + Date.now();
+    console.log('=== J-STARK VERSION 9.2 ESTIMATE CALC FIX LOADED ===', window.APP_VERSION);
+    console.log('[V9] Fixed: Custom price duplicate issue resolved in source files');
+    console.log('[V9] Fixed: Service description formatting corrected');
+    console.log('[V9.1] Fixed: Estimate calculator dimension error handled gracefully');
+    console.log('[V9.2] Fixed: Estimate custom & regular price selection with DOM fallback');
+    
+    // Simplified - all duplicate prevention logic is now in the source files
+    </script>
+    
+    <!-- VERSION 9.2 CACHE FIX -->
+    <script>
+    (function() {
+        'use strict';
+        console.log('[V9.2] Cache fix active');
+        
+        // Create global CacheManager if it doesn't exist
+        window.CacheManager = window.CacheManager || {};
+        
+        // Override forceUpdate function
+        window.CacheManager.forceUpdate = async function() {
+            console.log('[V6] Cache clear initiated');
+            
+            // 1. Unregister all service workers
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                    console.log('[V6] Service workers unregistered');
+                } catch (e) {
+                    console.error('[V6] SW unregister failed:', e);
+                }
+            }
+            
+            // 2. Clear all caches
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    console.log('[V6] Caches cleared');
+                } catch (e) {
+                    console.error('[V6] Cache clear failed:', e);
+                }
+            }
+            
+            // 3. Clear runtime storage (but preserve business data)
+            try {
+                // Clear session storage completely
+                sessionStorage.clear();
+                
+                // Selectively clear localStorage (preserve business data)
+                const preserveKeys = ['invoices', 'estimates', 'customers', 'settings', 'businessData'];
+                const allKeys = Object.keys(localStorage);
+                
+                allKeys.forEach(key => {
+                    if (!preserveKeys.some(preserve => key.includes(preserve))) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                console.log('[V6] Runtime storage cleared');
+            } catch (e) {
+                console.error('[V6] Storage clear failed:', e);
+            }
+            
+            // 4. Force reload with cache bypass
+            setTimeout(() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('v9.2', Date.now());
+                url.searchParams.set('nocache', 'true');
+                url.searchParams.set('version', 'VERSION-9.2-ESTIMATE-CALC-FIX');
+                // Hard reload
+                window.location.href = url.toString();
+            }, 500);
+        };
+        
+        // Override any Clear Cache button clicks
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('#btnClearCache, [onclick*="CacheManager.forceUpdate"]');
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[V9.2] Clear Cache button clicked');
+                window.CacheManager.forceUpdate();
+            }
+        }, true);
+    })();
+    </script>
+    
+    <!-- Skip Navigation Links for Keyboard Users -->
+    <div class="skip-links">
+        <a href="#main-content" class="skip-link" data-testid="skip-to-main">Skip to main content</a>
+        <a href="#navigation" class="skip-link" data-testid="skip-to-nav">Skip to navigation</a>
+    </div>
+
+    <div class="app-container" role="application" aria-label="J. Stark Business Invoicing System">
+        <!-- Header -->
+        <header class="app-header" role="banner" data-testid="app-header">
+            <div class="header-content">
+                <div class="logo-section" onclick="showDashboard()" style="cursor: pointer;" title="Return to Dashboard">
+                    <img src="https://i.imgur.com/u294xgL.png" alt="J. Stark Business Logo" class="company-logo">
+                    <div class="company-info">
+                        <h1>J. Stark Business Invoicing</h1>
+                        <p>Superior Concrete Leveling & J. Stark Masonry</p>
+                    </div>
+                </div>
+                <nav class="header-actions" role="navigation" aria-label="Primary navigation" id="navigation" data-testid="primary-nav">
+                    <div class="dropdown">
+                        <button id="new-job-btn" class="btn btn-primary btn-large dropdown-toggle" onclick="toggleNewJobDropdown()">
+                            <i class="fas fa-plus"></i>
+                            <span>New Job</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="new-job-dropdown">
+                            <button class="dropdown-item" onclick="createNewInvoice('concrete')">
+                                <i class="fas fa-road"></i>
+                                <span>Concrete Invoice</span>
+                            </button>
+                            <button class="dropdown-item" onclick="createNewInvoice('masonry')">
+                                <i class="fas fa-home"></i>
+                                <span>Masonry Invoice</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" onclick="createNewEstimate('concrete')">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Concrete Estimate</span>
+                            </button>
+                            <button class="dropdown-item" onclick="createNewEstimate('masonry')">
+                                <i class="fas fa-signature"></i>
+                                <span>Masonry Estimate</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="view-jobs-btn" class="btn btn-secondary btn-large" onclick="showAllInvoices()">
+                        <i class="fas fa-folder-open"></i>
+                        <span>View Jobs</span>
+                    </button>
+                    <div class="dropdown">
+                        <button id="settings-btn" class="btn btn-outline btn-large dropdown-toggle" onclick="toggleSettingsDropdown()">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="settings-dropdown">
+                            <button class="dropdown-item" onclick="showEmailSettings()">
+                                <i class="fas fa-envelope"></i>
+                                <span>Email Settings</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" onclick="App.exportToCSV()">
+                                <i class="fas fa-file-csv"></i>
+                                <span>Export Invoices</span>
+                            </button>
+                            <button class="dropdown-item" onclick="App.exportCustomersToCSV()">
+                                <i class="fas fa-users"></i>
+                                <span>Export Customers</span>
+                            </button>
+                            <button class="dropdown-item" onclick="StorageManager.downloadBackup()">
+                                <i class="fas fa-download"></i>
+                                <span>Download Backup</span>
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" onclick="CacheManager.forceUpdate()">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Clear Cache</span>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard" class="view active">
+                <div class="dashboard-header">
+                    <h2>Home Screen</h2>
+                    <p>Create and manage invoices for your concrete and masonry jobs</p>
+                </div>
+                
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-jobs">0</h3>
+                            <p>Total Jobs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-pending">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pending-payment">0</h3>
+                            <p>Pending Payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="month-revenue">$0.00</h3>
+                            <p>This Month's Revenue</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card estimate-stat">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-contract"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="active-estimates">0</h3>
+                            <p>Active Estimates</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="primary-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="primary-action-buttons">
+                        <button class="primary-action-btn" id="create-invoice-btn" onclick="showCreateInvoiceOptions()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">Create Invoice</span>
+                                <span class="action-description">New concrete or masonry job</span>
+                            </div>
+                        </button>
+                        <button class="primary-action-btn" id="create-estimate-btn" onclick="showCreateEstimateOptions()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">Create Estimate</span>
+                                <span class="action-description">Get customer approval first</span>
+                            </div>
+                        </button>
+                        <button class="primary-action-btn" onclick="showAllInvoices()">
+                            <div class="action-icon">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="action-content">
+                                <span class="action-title">View Jobs</span>
+                                <span class="action-description">All invoices and estimates</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div class="recent-activity-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                        <button class="btn btn-sm btn-outline" onclick="showAllInvoices()">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div id="recent-activity-list" class="activity-list">
+                        <!-- Will be populated by JavaScript -->
+                        <div class="activity-placeholder">
+                            <i class="fas fa-inbox"></i>
+                            <p>No recent activity</p>
+                            <p class="subtext">Your invoices and estimates will appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Invoice Creation View -->
+            <section id="invoice-creation" class="view">
+                <div class="invoice-form-container">
+                    <div class="form-header">
+                        <h2>Create New Invoice</h2>
+                        <button class="btn btn-secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+
+                    <form id="invoice-form" class="invoice-form">
+                        <!-- Step Indicator -->
+                        <div class="step-indicator">
+                            <div class="step active" data-step="1">
+                                <span class="step-number">1</span>
+                                <span class="step-label">Choose Business</span>
+                            </div>
+                            <div class="step" data-step="2">
+                                <span class="step-number">2</span>
+                                <span class="step-label">Customer Info</span>
+                            </div>
+                            <div class="step" data-step="3">
+                                <span class="step-number">3</span>
+                                <span class="step-label">Add Services</span>
+                            </div>
+                            <div class="step" data-step="4">
+                                <span class="step-number">4</span>
+                                <span class="step-label">Review & Create</span>
+                            </div>
+                        </div>
+
+                        <!-- Company Selection -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-building"></i> Step 1: Which Business?</h3>
+                            <div class="business-selector">
+                                <label class="business-option">
+                                    <input type="radio" name="businessType" value="concrete" id="business-concrete" data-testid="business-type-concrete">
+                                    <div class="business-card">
+                                        <i class="fas fa-road"></i>
+                                        <span class="business-name">Superior Concrete Leveling</span>
+                                        <span class="business-desc">Concrete lifting & leveling</span>
+                                    </div>
+                                </label>
+                                <label class="business-option">
+                                    <input type="radio" name="businessType" value="masonry" id="business-masonry" data-testid="business-type-masonry">
+                                    <div class="business-card">
+                                        <i class="fas fa-home"></i>
+                                        <span class="business-name">J. Stark Masonry</span>
+                                        <span class="business-desc">Brick, stone & chimney work</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-user"></i> Step 2: Customer Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="customer-name">
+                                        Customer Name:
+                                        <span class="help-icon" data-tooltip="Enter the full name of your customer. This will appear on the invoice.">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="customer-name" name="customerName" required 
+                                           data-validate="name" minlength="2" maxlength="100" 
+                                           placeholder="John Smith" data-testid="customer-name">
+                                    <div class="error-message" id="customer-name-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="customer-email">Email:
+                                        <span class="help-icon" data-tooltip="Optional: Customer's email address for sending invoices electronically.">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="email" id="customer-email" name="customerEmail" 
+                                           data-validate="email" placeholder="customer@example.com" data-testid="customer-email">
+                                    <div class="error-message" id="customer-email-error" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="customer-phone">Phone:</label>
+                                    <input type="tel" id="customer-phone" name="customerPhone" 
+                                           data-validate="phone" placeholder="(555) 123-4567" data-testid="customer-phone">
+                                    <div class="error-message" id="customer-phone-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="invoice-date">Invoice Date:</label>
+                                    <input type="date" id="invoice-date" name="invoiceDate" required data-testid="invoice-date">
+                                    <div class="error-message" id="invoice-date-error" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="customer-street">Service Address: <span class="required">*</span></label>
+                                <input type="text" id="customer-street" name="customerStreet" data-testid="customer-street" 
+                                       placeholder="Street Address" class="form-control" required data-validate="address">
+                                <div class="error-message" id="customer-street-error" style="display: none;"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="customer-city">City: <span class="required">*</span></label>
+                                    <input type="text" id="customer-city" name="customerCity" data-testid="customer-city" 
+                                           placeholder="City" class="form-control" required data-validate="city">
+                                    <div class="error-message" id="customer-city-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="customer-state">State: <span class="required">*</span></label>
+                                    <input type="text" id="customer-state" name="customerState" data-testid="customer-state" 
+                                           placeholder="State" class="form-control" maxlength="2" required data-validate="state">
+                                    <div class="error-message" id="customer-state-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="customer-zip">ZIP Code:</label>
+                                    <input type="text" id="customer-zip" name="customerZip" data-testid="customer-zip" 
+                                           placeholder="ZIP" class="form-control" maxlength="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Concrete Services - Simple Entry -->
+                        <!-- === SAFE-HOTFIX: INPUT-SCOPE (BEGIN - Step 1: Add calc-root marker for invoice) -->
+                        <div id="concrete-services" class="form-section service-section" style="display: none;" data-calc-root="invoice">
+                            <h3><i class="fas fa-road"></i> Step 3: Add Concrete Services</h3>
+                        <!-- === SAFE-HOTFIX: INPUT-SCOPE (END - Step 1) -->
+                            
+                            <!-- ER Polyurethane Calculator - Improved UI -->
+                            <div class="calculator-section" id="er-poly-calculator">
+                                <h4><i class="fas fa-calculator"></i> Concrete Leveling Price Calculator</h4>
+                                <p class="calculator-help">Calculate pricing for polyurethane foam concrete leveling jobs</p>
+                                
+                                <!-- Workflow Steps -->
+                                <div class="calc-workflow-steps">
+                                    <div class="calc-step active" id="step-dimensions">
+                                        <div class="calc-step-number">1</div>
+                                        <div class="calc-step-label">Enter Dimensions</div>
+                                    </div>
+                                    <div class="calc-step" id="step-settings">
+                                        <div class="calc-step-number">2</div>
+                                        <div class="calc-step-label">Configure Settings</div>
+                                    </div>
+                                    <div class="calc-step" id="step-calculate">
+                                        <div class="calc-step-number">3</div>
+                                        <div class="calc-step-label">Calculate Price</div>
+                                    </div>
+                                    <div class="calc-step" id="step-select">
+                                        <div class="calc-step-number">4</div>
+                                        <div class="calc-step-label">Select & Add</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Slab Dimensions -->
+                                <div class="calc-section">
+                                    <h5>Slab Dimensions</h5>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="calc-length">
+                                                Length (feet)
+                                                <span class="help-icon" data-tooltip="Length of the concrete slab">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <input type="number" id="calc-length" data-testid="calc-length" 
+                                                   min="0" step="0.1" placeholder="Enter length" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-width">
+                                                Width (feet)
+                                                <span class="help-icon" data-tooltip="Width of the concrete slab">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <input type="number" id="calc-width" data-testid="calc-width"
+                                                   min="0" step="0.1" placeholder="Enter width" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-depth">
+                                                Lift Height (inches)
+                                                <span class="help-icon" data-tooltip="How many inches to lift the slab">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <input type="number" id="calc-depth" data-testid="calc-depth"
+                                                   min="0" step="0.1" placeholder="Enter lift height" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Settlement Pattern -->
+                                <div class="calc-section">
+                                    <h5>Settlement Pattern</h5>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="calc-sides">
+                                                How is the slab settled?
+                                                <span class="help-icon" data-tooltip="Select how many sides of the slab have settled">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <select id="calc-sides" data-testid="calc-sides" class="form-control">
+                                                <option value="1">One side settled (most common)</option>
+                                                <option value="2">Two sides/corner settled</option>
+                                                <option value="3">Entire slab settled evenly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Foam Type Selection -->
+                                <div class="calc-section">
+                                    <h5>Foam Type & Application</h5>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>
+                                                Select Foam Density
+                                                <span class="help-icon" data-tooltip="RR201 is standard density, RR401 is high density for heavy loads">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                                <button type="button" class="btn-clear" onclick="clearFoamType()" title="Clear selection">
+                                                    <i class="fas fa-times-circle"></i> Clear
+                                                </button>
+                                            </label>
+                                            <div class="radio-group-vertical" id="foam-type-group">
+                                                <label class="radio-option">
+                                                    <input type="radio" name="foamType" value="none" 
+                                                           data-testid="calc-foam-none" style="display: none;">
+                                                    <span class="radio-label none-option" style="display: none;">
+                                                        <strong>None Selected</strong>
+                                                        <small>Click to clear foam type selection</small>
+                                                    </span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio" name="foamType" value="RR201" 
+                                                           data-testid="calc-rr201" checked>
+                                                    <span class="radio-label">
+                                                        <strong>RR201 - Standard Density</strong>
+                                                        <small>For residential driveways, sidewalks, patios</small>
+                                                    </span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio" name="foamType" value="RR401" 
+                                                           data-testid="calc-rr401">
+                                                    <span class="radio-label">
+                                                        <strong>RR401 - High Density</strong>
+                                                        <small>For commercial, highways, heavy traffic areas</small>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>
+                                                Application Type
+                                                <span class="help-icon" data-tooltip="Standard lift raises concrete, void fill fills empty spaces under slab">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                                <button type="button" class="btn-clear" onclick="clearApplicationType()" title="Clear selection">
+                                                    <i class="fas fa-times-circle"></i> Clear
+                                                </button>
+                                            </label>
+                                            <div class="radio-group-vertical" id="app-type-group">
+                                                <label class="radio-option">
+                                                    <input type="radio" name="applicationType" value="none" 
+                                                           id="calc-app-none" style="display: none;">
+                                                    <span class="radio-label none-option" style="display: none;">
+                                                        <strong>None Selected</strong>
+                                                        <small>Click to clear application type selection</small>
+                                                    </span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio" name="applicationType" value="lift" 
+                                                           id="calc-lift" checked>
+                                                    <span class="radio-label">
+                                                        <strong>Standard Lift</strong>
+                                                        <small>Lifting and leveling settled concrete</small>
+                                                    </span>
+                                                </label>
+                                                <label class="radio-option">
+                                                    <input type="radio" name="applicationType" value="void" 
+                                                           id="calc-void-radio">
+                                                    <span class="radio-label">
+                                                        <strong>Void Fill</strong>
+                                                        <small>Filling voids under concrete (uses less material)</small>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pricing -->
+                                <div class="calc-section">
+                                    <h5>Material Pricing</h5>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="calc-price-low">
+                                                Minimum Price per Pound
+                                                <span class="help-icon" data-tooltip="Your lowest price per pound of foam">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <div class="input-with-currency">
+                                                <span class="currency-symbol">$</span>
+                                                <input type="number" id="calc-price-low" data-testid="calc-price-low"
+                                                       min="0" step="0.01" placeholder="10.00" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-price-high">
+                                                Maximum Price per Pound
+                                                <span class="help-icon" data-tooltip="Your highest price per pound of foam">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </span>
+                                            </label>
+                                            <div class="input-with-currency">
+                                                <span class="currency-symbol">$</span>
+                                                <input type="number" id="calc-price-high" data-testid="calc-price-high"
+                                                       min="0" step="0.01" placeholder="15.00" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Pro Settings Toggle -->
+                                <div class="form-row">
+                                    <label>
+                                        <input type="checkbox" id="pro-toggle" data-testid="pro-toggle">
+                                        Show Pro Settings
+                                    </label>
+                                </div>
+                                
+                                <!-- Pro Settings Panel (hidden by default) -->
+                                <div id="pro-panel" data-testid="pro-panel" style="display: none;" 
+                                     class="pro-settings-panel">
+                                    <h5>Pro Settings</h5>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Wedge Multipliers:</label>
+                                            <div class="pro-inputs">
+                                                <label>k1 (1 side):</label>
+                                                <input type="number" id="pro-k1" data-testid="pro-k1" 
+                                                       min="0" max="1" step="0.01" value="0.5" class="form-control">
+                                                <label>k2 (2 sides):</label>
+                                                <input type="number" id="pro-k2" data-testid="pro-k2"
+                                                       min="0" max="1" step="0.01" value="0.25" class="form-control">
+                                                <label>k3 (entire):</label>
+                                                <input type="number" id="pro-k3" data-testid="pro-k3"
+                                                       min="0" max="2" step="0.01" value="1.0" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Foam Factors (lb/yd³):</label>
+                                            <div class="pro-inputs">
+                                                <label>RR201 Lift:</label>
+                                                <input type="number" id="pro-f201" data-testid="pro-f201"
+                                                       min="0" step="1" value="100" class="form-control">
+                                                <label>RR201 Void:</label>
+                                                <input type="number" id="pro-f201v" data-testid="pro-f201v"
+                                                       min="0" step="1" value="70" class="form-control">
+                                                <label>RR401 Lift:</label>
+                                                <input type="number" id="pro-f401" data-testid="pro-f401"
+                                                       min="0" step="1" value="120" class="form-control">
+                                                <label>RR401 Void:</label>
+                                                <input type="number" id="pro-f401v" data-testid="pro-f401v"
+                                                       min="0" step="1" value="110" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <button type="button" id="pro-save" data-testid="pro-save" 
+                                                class="btn btn-primary">Save</button>
+                                        <button type="button" id="pro-reset" data-testid="pro-reset"
+                                                class="btn btn-secondary">Reset to Defaults</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Calculate Button -->
+                                <div class="form-row">
+                                    <button type="button" id="calculate-poly" class="btn btn-primary btn-large">
+                                        <i class="fas fa-calculator"></i> Calculate Price
+                                    </button>
+                                </div>
+                                
+                                <!-- Calculator Results -->
+                                <div class="calculator-results" id="calc-results" style="display: none;">
+                                    <h5><i class="fas fa-chart-bar"></i> Calculation Results</h5>
+                                    
+                                    <!-- Material Requirements -->
+                                    <div class="results-section">
+                                        <h6>Material Requirements</h6>
+                                        <div class="result-grid">
+                                            <div class="result-item">
+                                                <label>Volume:</label>
+                                                <span class="result-value">
+                                                    <span id="out-ft3" data-testid="out-ft3">-</span> ft³
+                                                    (<span id="out-yd3" data-testid="out-yd3">-</span> yd³)
+                                                </span>
+                                            </div>
+                                            <div class="result-item">
+                                                <label>Foam Required:</label>
+                                                <span class="result-value">
+                                                    <strong id="out-lbs" data-testid="out-lbs">-</strong> pounds
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Pricing Options -->
+                                    <div class="results-section">
+                                        <h6>Pricing Options</h6>
+                                        <div class="price-options">
+                                            <label class="price-option">
+                                                <input type="radio" name="priceSelection" value="low">
+                                                <div class="price-card">
+                                                    <span class="price-label">Minimum</span>
+                                                    <span class="price-value" id="out-price-low" data-testid="out-price-low">$-</span>
+                                                    <small>Budget option</small>
+                                                </div>
+                                            </label>
+                                            <label class="price-option recommended">
+                                                <input type="radio" name="priceSelection" value="mid" checked>
+                                                <div class="price-card">
+                                                    <span class="price-label">Recommended</span>
+                                                    <span class="price-value" id="out-price-mid" data-testid="out-price-mid">$-</span>
+                                                    <small>Standard pricing</small>
+                                                </div>
+                                            </label>
+                                            <label class="price-option">
+                                                <input type="radio" name="priceSelection" value="high">
+                                                <div class="price-card">
+                                                    <span class="price-label">Maximum</span>
+                                                    <span class="price-value" id="out-price-high" data-testid="out-price-high">$-</span>
+                                                    <small>Premium option</small>
+                                                </div>
+                                            </label>
+                                            <label class="price-option">
+                                                <input type="radio" name="priceSelection" value="custom">
+                                                <div class="price-card">
+                                                    <span class="price-label">Custom</span>
+                                                    <div class="custom-price-input">
+                                                        <span class="currency-symbol">$</span>
+                                                        <input type="number" id="custom-price" min="0" step="0.01" 
+                                                               placeholder="Enter amount" class="form-control">
+                                                    </div>
+                                                    <small>Set your own price</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="form-row">
+                                        <button type="button" id="use-selected-price" class="btn btn-success btn-large">
+                                            <i class="fas fa-check"></i> Use Selected Price
+                                        </button>
+                                        <button type="button" id="recalculate" class="btn btn-secondary">
+                                            <i class="fas fa-redo"></i> Recalculate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Removed Individual Slab Entry - All slabs must come from THE calculator above -->
+                        </div>
+
+                        <!-- Masonry Services -->
+                        <div id="masonry-services" class="form-section service-section" style="display: none;">
+                            <h3><i class="fas fa-home"></i> Step 3: Add Masonry Services</h3>
+                            
+                            <!-- Frequent Services Quick Add -->
+                            <div id="frequent-services-masonry" class="frequent-services-section" style="display: none;">
+                                <label>Quick Add Recent Services:</label>
+                                <div class="frequent-services-grid">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                            
+                            <div class="masonry-services-list">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="masonry-service">Service Type:</label>
+                                        <select id="masonry-service" name="masonryService">
+                                            <option value="">Select service...</option>
+                                            <option value="brick-installation">Brick Installation</option>
+                                            <option value="brick-repair">Brick Repair</option>
+                                            <option value="stone-fireplace">Stone Fireplace</option>
+                                            <option value="chimney-repair">Chimney Repair</option>
+                                            <option value="chimney-restoration">Chimney Restoration</option>
+                                            <option value="outdoor-fireplace">Outdoor Fireplace</option>
+                                            <option value="patio-construction">Patio Construction</option>
+                                            <option value="fire-pit">Fire Pit Installation</option>
+                                            <option value="outdoor-kitchen">Outdoor Kitchen</option>
+                                            <option value="veneer-stone">Veneer Stone Installation</option>
+                                            <option value="cultured-stone">Cultured Stone Application</option>
+                                            <option value="custom">Custom Masonry Work</option>
+                                        </select>
+                                        <div class="error-message" id="masonry-service-error" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="masonry-description">Description:</label>
+                                        <!-- === SAFE-HOTFIX: MASONRY DESC LENGTH (BEGIN) - Remove hardcoded limit -->
+                                        <textarea id="masonry-description" name="masonryDescription" rows="2" 
+                                                  placeholder="Describe the work to be performed..."></textarea>
+                                        <!-- === SAFE-HOTFIX: MASONRY DESC LENGTH (END) -->
+                                        <div class="error-message" id="masonry-description-error" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="masonry-job-price">
+                                            Job Price:
+                                            <span class="help-icon" data-tooltip="Enter the total price for this masonry job. This will be the final amount charged to the customer.">
+                                                <i class="fas fa-question-circle"></i>
+                                            </span>
+                                        </label>
+                                        <div class="input-with-currency">
+                                            <span class="currency-symbol">$</span>
+                                            <input type="number" id="masonry-job-price" name="masonryJobPrice" min="0.01" step="0.01" 
+                                                   data-validate="currency" placeholder="0.00">
+                                            <div class="error-message" id="masonry-job-price-error" style="display: none;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" id="add-masonry-service" class="btn btn-primary" data-testid="add-masonry-service-button">
+                                    Add Service to Invoice
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Services List -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-clipboard-list"></i> Step 4: Review Services</h3>
+                            <div id="services-list" class="services-list">
+                                <p class="empty-services">No services added yet. Add services using the sections above.</p>
+                            </div>
+                            <div class="invoice-totals">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span id="invoice-subtotal">$0.00</span>
+                                </div>
+                                <!-- Tax row removed per user request -->
+                                <div class="total-row grand-total">
+                                    <span>Total:</span>
+                                    <span id="invoice-grand-total">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h3>Additional Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="invoice-status">Invoice Status:
+                                        <span class="help-icon" data-tooltip="Draft: Work in progress | Sent: Delivered to customer | Paid: Payment received | Overdue: Past due date">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <select id="invoice-status" name="invoiceStatus">
+                                        <option value="draft">Draft</option>
+                                        <option value="sent">Sent</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="overdue">Overdue</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- === VERSION 9.17: Notes/Terms field removed per user request === -->
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
+                            <button type="button" id="preview-invoice" class="btn btn-secondary" title="Preview invoice before creating">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            <button type="submit" class="btn btn-primary" data-testid="submit-invoice">Create Invoice</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Invoice Preview -->
+            <section id="invoice-preview" class="view">
+                <div class="preview-container">
+                    <div class="preview-header">
+                        <h2>Invoice Preview</h2>
+                        <div class="preview-actions">
+                            <button class="btn btn-secondary" onclick="editInvoice()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-primary" onclick="printInvoice()">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button class="btn btn-success" onclick="downloadPDF()">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                            <button class="btn btn-info" onclick="emailInvoice()">
+                                <i class="fas fa-paper-plane"></i> Email Invoice
+                            </button>
+                            <button class="btn btn-warning" onclick="exportCurrentInvoiceCSV()" title="Export this invoice to CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div id="invoice-preview-content" class="invoice-document">
+                        <!-- Invoice content will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estimate Creation View -->
+            <section id="estimate-creation" class="view">
+                <div class="invoice-form-container">
+                    <div class="form-header estimate-header">
+                        <h2>Create New Estimate</h2>
+                        <button class="btn btn-secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+
+                    <form id="estimate-form" class="invoice-form">
+                        <!-- Step Indicator -->
+                        <div class="step-indicator">
+                            <div class="step active" data-step="1">
+                                <span class="step-number">1</span>
+                                <span class="step-label">Choose Business</span>
+                            </div>
+                            <div class="step" data-step="2">
+                                <span class="step-number">2</span>
+                                <span class="step-label">Customer Info</span>
+                            </div>
+                            <div class="step" data-step="3">
+                                <span class="step-number">3</span>
+                                <span class="step-label">Add Services</span>
+                            </div>
+                            <div class="step" data-step="4">
+                                <span class="step-number">4</span>
+                                <span class="step-label">Review & Sign</span>
+                            </div>
+                        </div>
+
+                        <!-- Company Selection -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-building"></i> Step 1: Which Business?</h3>
+                            <div class="business-selector">
+                                <label class="business-option">
+                                    <input type="radio" name="estimateBusinessType" value="concrete" id="estimate-business-concrete" data-testid="estimate-business-type-concrete">
+                                    <div class="business-card">
+                                        <i class="fas fa-road"></i>
+                                        <span class="business-name">Superior Concrete Leveling</span>
+                                        <span class="business-desc">Concrete lifting & leveling</span>
+                                    </div>
+                                </label>
+                                <label class="business-option">
+                                    <input type="radio" name="estimateBusinessType" value="masonry" id="estimate-business-masonry" data-testid="estimate-business-type-masonry">
+                                    <div class="business-card">
+                                        <i class="fas fa-home"></i>
+                                        <span class="business-name">J. Stark Masonry</span>
+                                        <span class="business-desc">Brick, stone & chimney work</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-user"></i> Step 2: Customer Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estimate-customer-name">
+                                        Customer Name:
+                                        <span class="help-icon" data-tooltip="Enter the full name of your customer. This will appear on the estimate.">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="estimate-customer-name" name="customerName" required 
+                                           data-validate="name" minlength="2" maxlength="100" 
+                                           placeholder="John Smith">
+                                    <div class="error-message" id="estimate-customer-name-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimate-customer-email">Email:
+                                        <span class="help-icon" data-tooltip="Customer's email address for sending estimates electronically.">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <input type="email" id="estimate-customer-email" name="customerEmail" 
+                                           data-validate="email" placeholder="customer@example.com">
+                                    <div class="error-message" id="estimate-customer-email-error" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estimate-customer-phone">Phone:</label>
+                                    <input type="tel" id="estimate-customer-phone" name="customerPhone" 
+                                           data-validate="phone" placeholder="(555) 123-4567">
+                                    <div class="error-message" id="estimate-customer-phone-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimate-date">Estimate Date:</label>
+                                    <input type="date" id="estimate-date" name="estimateDate" required>
+                                    <div class="error-message" id="estimate-date-error" style="display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="estimate-customer-street">Service Address: <span class="required">*</span></label>
+                                <input type="text" id="estimate-customer-street" name="estimateCustomerStreet" data-testid="estimate-customer-street" 
+                                       placeholder="Street Address" class="form-control" required data-validate="address">
+                                <div class="error-message" id="estimate-customer-street-error" style="display: none;"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estimate-customer-city">City: <span class="required">*</span></label>
+                                    <input type="text" id="estimate-customer-city" name="estimateCustomerCity" data-testid="estimate-customer-city" 
+                                           placeholder="City" class="form-control" required data-validate="city">
+                                    <div class="error-message" id="estimate-customer-city-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimate-customer-state">State: <span class="required">*</span></label>
+                                    <input type="text" id="estimate-customer-state" name="estimateCustomerState" data-testid="estimate-customer-state" 
+                                           placeholder="State" class="form-control" maxlength="2" required data-validate="state">
+                                    <div class="error-message" id="estimate-customer-state-error" style="display: none;"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="estimate-customer-zip">ZIP Code:</label>
+                                    <input type="text" id="estimate-customer-zip" name="estimateCustomerZip" data-testid="estimate-customer-zip" 
+                                           placeholder="ZIP" class="form-control" maxlength="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services Section (will be populated dynamically) -->
+                        <div id="estimate-services-section" class="form-section service-section">
+                            <h3><i class="fas fa-clipboard-list"></i> Step 3: Add Services</h3>
+                            <div id="estimate-services-content">
+                                <p class="empty-services">Select a business type above to add services.</p>
+                            </div>
+                        </div>
+
+                        <!-- Services List -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-clipboard-list"></i> Step 4: Review Services</h3>
+                            <div id="estimate-services-list" class="services-list">
+                                <p class="empty-services">No services added yet. Add services using the sections above.</p>
+                            </div>
+                            <div class="invoice-totals">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span id="estimate-subtotal">$0.00</span>
+                                </div>
+                                <!-- Tax row removed per user request -->
+                                <div class="total-row grand-total">
+                                    <span>Total:</span>
+                                    <span id="estimate-grand-total">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Signature Section -->
+                        <div class="form-section signature-section">
+                            <h3><i class="fas fa-signature"></i> Customer Approval & Signature</h3>
+                            <div class="signature-container">
+                                <div class="signature-instructions">
+                                    <p><strong>Customer:</strong> Please review the estimate above and choose how you'd like to provide your signature to approve this work.</p>
+                                </div>
+                                
+                                <!-- Signature Method Selection -->
+                                <div class="signature-method-selector">
+                                    <label>Choose Signature Method:</label>
+                                    <div class="signature-method-options">
+                                        <label class="signature-method-option">
+                                            <input type="radio" name="signatureMethod" value="digital" checked>
+                                            <div class="method-card">
+                                                <i class="fas fa-tablet-alt"></i>
+                                                <span class="method-name">Digital Signature</span>
+                                                <span class="method-desc">Sign directly on screen</span>
+                                            </div>
+                                        </label>
+                                        <label class="signature-method-option">
+                                            <input type="radio" name="signatureMethod" value="email">
+                                            <div class="method-card">
+                                                <i class="fas fa-envelope"></i>
+                                                <span class="method-name">Email for Signature</span>
+                                                <span class="method-desc">Send to customer email</span>
+                                            </div>
+                                        </label>
+                                        <label class="signature-method-option">
+                                            <input type="radio" name="signatureMethod" value="print">
+                                            <div class="method-card">
+                                                <i class="fas fa-print"></i>
+                                                <span class="method-name">Print & Sign</span>
+                                                <span class="method-desc">Print for physical signature</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="signature-customer-name">Customer Name (for signature):</label>
+                                    <input type="text" id="signature-customer-name" name="signatureCustomerName" 
+                                           data-validate="name" minlength="2" maxlength="100" 
+                                           placeholder="Full legal name">
+                                    <div class="error-message" id="signature-customer-name-error" style="display: none;"></div>
+                                </div>
+                                
+                                <!-- Digital Signature Section -->
+                                <div id="digital-signature-section" class="signature-canvas-container">
+                                    <label>Digital Signature:</label>
+                                    <canvas id="signature-canvas" width="600" height="200"></canvas>
+                                    <div class="signature-controls">
+                                        <button type="button" id="clear-signature" class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-eraser"></i> Clear Signature
+                                        </button>
+                                        <span class="signature-help">Sign using your mouse, touchpad, or finger on mobile</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Email Signature Section -->
+                                <div id="email-signature-section" class="email-signature-container" style="display: none;">
+                                    <div class="email-signature-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>An email will be sent to the customer with a link to view and digitally sign this estimate online.</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="customer-email-signature">Customer Email Address:</label>
+                                        <input type="email" id="customer-email-signature" name="customerEmailSignature" 
+                                               data-validate="email" placeholder="customer@example.com">
+                                        <div class="error-message" id="customer-email-signature-error" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="signature-message">Message to Customer (optional):</label>
+                                        <textarea id="signature-message" name="signatureMessage" rows="3" placeholder="Please review and sign the attached estimate at your convenience..."></textarea>
+                                    </div>
+                                </div>
+                                
+                                <!-- Print Signature Section -->
+                                <div id="print-signature-section" class="print-signature-container" style="display: none;">
+                                    <div class="print-signature-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>A printable version will be generated with signature lines for the customer to sign physically.</p>
+                                    </div>
+                                    <div class="print-options">
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" id="include-signature-lines" checked>
+                                                Include signature lines on printed estimate
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <input type="checkbox" id="include-date-line" checked>
+                                                Include date line for signature
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="approval-checkbox">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="estimate-approval" name="estimateApproval">
+                                        <span class="checkmark"></span>
+                                        I approve this work estimate and authorize the work to proceed as specified.
+                                    </label>
+                                </div>
+                                
+                                <div class="signature-timestamp">
+                                    <span id="signature-date-time"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h3>Additional Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estimate-status">Estimate Status:
+                                        <span class="help-icon" data-tooltip="Draft: Work in progress | Sent: Delivered to customer | Approved: Customer signed | Rejected: Customer declined | Converted: Made into invoice">
+                                            <i class="fas fa-question-circle"></i>
+                                        </span>
+                                    </label>
+                                    <select id="estimate-status" name="estimateStatus">
+                                        <option value="draft">Draft</option>
+                                        <option value="sent">Sent</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="converted">Converted to Invoice</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- === VERSION 9.17: Notes/Terms field removed per user request === -->
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
+                            <!-- Save Draft button removed -->
+                            <button type="button" id="preview-estimate" class="btn btn-secondary" title="Preview estimate before creating">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            <button type="submit" class="btn btn-primary" data-testid="submit-estimate">Create Estimate</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Estimate Preview -->
+            <section id="estimate-preview" class="view">
+                <div class="preview-container">
+                    <div class="preview-header estimate-preview-header">
+                        <h2>Estimate Preview</h2>
+                        <div class="preview-actions">
+                            <button class="btn btn-secondary" onclick="editEstimate()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-info" onclick="convertToInvoice()">
+                                <i class="fas fa-file-invoice"></i> Convert to Invoice
+                            </button>
+                            <button class="btn btn-primary" onclick="printEstimate()">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button class="btn btn-success" onclick="downloadEstimatePDF()">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
+                            <button class="btn btn-warning" onclick="emailEstimate()">
+                                <i class="fas fa-paper-plane"></i> Email Estimate
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportCurrentEstimateCSV()" title="Export this estimate to CSV">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div id="estimate-preview-content" class="invoice-document estimate-document">
+                        <!-- Estimate content will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estimate List View -->
+            <section id="estimate-list" class="view">
+                <div class="list-header">
+                    <h2>All Estimates</h2>
+                    <div class="list-actions">
+                        <input type="text" id="search-estimates" placeholder="Search estimates...">
+                        <select id="filter-estimate-status">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="converted">Converted</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="App.exportEstimatesToCSV()" title="Export estimates to CSV file">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="createNewEstimate()">
+                            <i class="fas fa-plus"></i> New Estimate
+                        </button>
+                    </div>
+                </div>
+                <div id="estimates-table-container" class="table-container">
+                    <table id="estimates-table" class="invoices-table">
+                        <thead>
+                            <tr>
+                                <th>Estimate #</th>
+                                <th>Customer</th>
+                                <th>Business</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Signature</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estimates-table-body">
+                            <tr>
+                                <td colspan="8" class="empty-table">No estimates found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Invoice List View -->
+            <section id="invoice-list" class="view">
+                <div class="list-header">
+                    <h2>All Invoices</h2>
+                    <div class="list-actions">
+                        <input type="text" id="search-invoices" placeholder="Search invoices...">
+                        <select id="filter-status">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="paid">Paid</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="App.exportToCSV()" title="Export invoices to CSV file">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="createNewInvoice()">
+                            <i class="fas fa-plus"></i> New Invoice
+                        </button>
+                    </div>
+                </div>
+                <div id="invoices-table-container" class="table-container">
+                    <table id="invoices-table" class="invoices-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Business</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-table-body">
+                            <tr>
+                                <td colspan="7" class="empty-table">No invoices found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Keyboard Shortcuts Help Dialog -->
+    <div id="keyboard-shortcuts-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="closeKeyboardShortcuts()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcuts-section">
+                        <h3>Navigation</h3>
+                        <div class="shortcut-item">
+                            <kbd>Alt</kbd> + <kbd>N</kbd>
+                            <span>New Invoice</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Alt</kbd> + <kbd>D</kbd>
+                            <span>Dashboard</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Alt</kbd> + <kbd>L</kbd>
+                            <span>View Invoice List</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Tab</kbd>
+                            <span>Next Field</span>
+                        </div>
+                    </div>
+                    
+                    <div class="shortcuts-section">
+                        <h3>Invoice Actions</h3>
+                        <!-- Save Draft shortcut removed -->
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>P</kbd>
+                            <span>Print/Preview</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>E</kbd>
+                            <span>Email Invoice</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>D</kbd>
+                            <span>Download PDF</span>
+                        </div>
+                    </div>
+                    
+                    <div class="shortcuts-section">
+                        <h3>Calculator</h3>
+                        <div class="shortcut-item">
+                            <kbd>Alt</kbd> + <kbd>C</kbd>
+                            <span>Focus Calculator</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Enter</kbd>
+                            <span>Add Service</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>1</kbd> - <kbd>8</kbd>
+                            <span>Select Project Type</span>
+                        </div>
+                    </div>
+                    
+                    <div class="shortcuts-section">
+                        <h3>General</h3>
+                        <div class="shortcut-item">
+                            <kbd>F1</kbd> or <kbd>Ctrl</kbd> + <kbd>?</kbd>
+                            <span>Show This Help</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Esc</kbd>
+                            <span>Close Dialog</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                            <span>Search Invoices</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeKeyboardShortcuts()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price review modal removed - using direct manual pricing -->
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+    
+
+<!-- CLEAN CORE SCRIPTS - MINIMAL SET FOR HOTFIX -->
+
+<!-- 1. Vendor Scripts: emailjs, jspdf, html2canvas (already loaded above) -->
+
+<!-- === SAFE-HOTFIX: ESTIMATE SUBMIT BRIDGE (BEGIN) - Fix script load order -->
+<!-- 2. Core: error-logger, validation, input-validator, notification-system, storage -->
+<script src="js/error-logger.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/input-validator.js"></script>
+<script src="js/notification-system.js"></script>
+<script src="js/storage.js?v=9.23"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE SAVE→LIST→PREVIEW→PDF (BEGIN) -->
+<script src="js/storage-estimates-patch.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE SAVE→LIST→PREVIEW→PDF (END) -->
+<!-- === SAFE-HOTFIX: VIEW JOBS SHOWS ESTIMATES (BEGIN) -->
+<!-- <script src="js/view-jobs-fix.js"></script> -->
+<!-- <script src="js/view-jobs-enhanced.js"></script> -->
+<!-- <script src="js/view-jobs-tabs.js"></script> -->
+<!-- <script src="js/view-jobs-tabs-simple.js"></script> -->
+<script src="js/view-jobs-tabs-final.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE LIST REFRESH (BEGIN) -->
+<!-- <script src="js/estimate-list-refresh-fix.js"></script> -->
+<!-- === SAFE-HOTFIX: ESTIMATE LIST REFRESH (END) -->
+<!-- === SAFE-HOTFIX: ESTIMATES TAB CLICKABILITY (BEGIN) -->
+<!-- <script src="js/estimates-tab-clickability-fix.js"></script> -->
+<script src="js/estimates-tab-navigation-final.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE SAVE AND REFRESH -->
+<script src="js/estimate-save-and-refresh-fix.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE PERSISTENCE & LIST (BEGIN) -->
+<!-- <script src="js/estimate-persistence-fix.js"></script> -->
+<script src="js/estimate-persistence-final.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE COUNT UPDATE FIX (BEGIN) -->
+<script src="js/estimate-count-fix.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE COUNT UPDATE FIX (END) -->
+<!-- === SAFE-HOTFIX: ESTIMATE SLAB REMOVE (BEGIN) -->
+<script src="js/estimate-slab-remove.js"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE SLAB REMOVE (END) -->
+<!-- === SAFE-HOTFIX: INVOICE CALC PRICE FIX (BEGIN) -->
+<script src="js/invoice-calc-fix.js"></script>
+<!-- === SAFE-HOTFIX: INVOICE CALC PRICE FIX (END) -->
+<!-- === SAFE-HOTFIX: CONTEXT DETECTION FIX (BEGIN) -->
+<script src="js/invoice-context-fix.js"></script>
+<!-- === SAFE-HOTFIX: CONTEXT DETECTION FIX (END) -->
+<!-- === SAFE-HOTFIX: INVOICE PREVIEW FIX (BEGIN) -->
+<script src="js/invoice-preview-fix.js"></script>
+<!-- === SAFE-HOTFIX: INVOICE PREVIEW FIX (END) -->
+<!-- === PREVIOUS FIXES DISABLED - REPLACED BY CONSOLIDATED FIX
+<script src="js/dashboard-buttons-fix.js"></script>
+<script src="js/ui-critical-fix.js"></script>
+<script src="js/estimate-button-fix.js"></script>
+=== END DISABLED -->
+<!-- === PREVIOUS NAVIGATION FIXES DISABLED - TOO MANY CONFLICTS
+<script src="js/consolidated-navigation-fix.js"></script>
+<script src="js/iterative-fix-estimate.js"></script>
+<script src="js/force-estimate-creation.js"></script>
+=== END DISABLED -->
+<!-- === STABLE NAVIGATION FIX (BEGIN) -->
+<script src="js/stable-navigation-fix.js"></script>
+<!-- === STABLE NAVIGATION FIX (END) -->
+<!-- === FINAL ESTIMATE FIX (BEGIN) -->
+<script src="js/final-estimate-fix.js"></script>
+<!-- === FINAL ESTIMATE FIX (END) -->
+<!-- === PROPER BUSINESS FLOW FIX (BEGIN) -->
+<script src="js/proper-business-flow-fix.js"></script>
+<script src="js/simple-calculator-fix.js"></script>
+<script src="js/invoice-calc-hotfix.js"></script>
+<!-- === PROPER BUSINESS FLOW FIX (END) -->
+<!-- === SAFE-HOTFIX: ESTIMATE PERSISTENCE & LIST (END) -->
+<!-- === SAFE-HOTFIX: ESTIMATES TAB CLICKABILITY (END) -->
+<!-- === SAFE-HOTFIX: VIEW JOBS SHOWS ESTIMATES (END) -->
+
+<!-- 3. Flows: invoice FIRST (defines InvoiceManager globally) BEFORE app.js -->
+<script src="js/invoice.js?v=9.24"></script>
+<!-- === SAFE-HOTFIX: ESTIMATE SUBMIT BRIDGE (END) - invoice.js must load before app.js -->
+
+<!-- 4. App.js loads AFTER InvoiceManager is defined -->
+<script src="js/app.js?v=9.21"></script>
+<script src="js/business-type-handler.js"></script>
+<!-- === SAFE-HOTFIX: MASONRY BUTTON FIX (BEGIN) - Add missing SimpleServiceManager -->
+<script src="js/simple-service-manager.js"></script>
+<!-- === SAFE-HOTFIX: MASONRY BUTTON FIX (END) -->
+<!-- Masonry Custom Quote Patch - Non-invasive implementation -->
+<script src="js/masonry-custom-quote-patch.js"></script>
+<script src="js/pdf.js?v=9.24"></script>
+<!-- === SAFE-HOTFIX: PDF DUPLICATE DOWNLOAD FIX (BEGIN) -->
+<!-- Fixed directly in pdf.js by preventing duplicate print() calls -->
+<!-- === SAFE-HOTFIX: PDF DUPLICATE DOWNLOAD FIX (END) -->
+
+<!-- 4. Concrete-only: erPolyEstimator, calculator, slab-manager -->
+<script type="module" src="src/lib/erPolyEstimator.js"></script>
+<script src="js/calculator.js?v=9.16"></script>
+<script src="js/custom-price-handler.js?v=9.15"></script>
+<script src="js/slab-manager.js?v=9.13"></script>
+
+<!-- 5. Signature/email: signature, email -->
+<script src="js/signature.js"></script>
+<script src="js/email.js?v=9.22"></script>
+
+<!-- Initialize signature canvas -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.Signature) {
+        window.Signature.init('signature-canvas');
+        const clearBtn = document.getElementById('clear-signature');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => window.Signature.clear());
+        }
+    }
+});
+</script>
+    <!-- UI Enhancement Scripts -->
+    <script src="js/ui-enhancements.js"></script>
+
+<!-- PWA Service Worker -->
+<!-- === SAFE-HOTFIX: PWA_OPT_OUT (BEGIN) -->
+<script>
+if ('serviceWorker' in navigator) {
+    // Only register service worker if the file exists
+    fetch('sw.js', { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                return navigator.serviceWorker.register('sw.js');
+            } else {
+                console.log('[PWA:DISABLED] Service worker file not found (dev mode)');
+            }
+        })
+        .then(reg => {
+            if (reg) console.log('ServiceWorker registered');
+        })
+        .catch(() => {
+            // Silently fail - no 404 spam
+            console.log('[PWA:DISABLED] Service worker registration skipped');
+        });
+}
+</script>
+<!-- === SAFE-HOTFIX: PWA_OPT_OUT (END) -->
+
+    <!-- J-Stark Surgical Fix - Debug Log Display -->
+    <div id="debug-log" style="position: fixed; bottom: 0; right: 0; width: 400px; height: 200px; background: rgba(0,0,0,0.9); color: #00ff00; font-family: 'Courier New', monospace; font-size: 11px; padding: 10px; overflow-y: auto; z-index: 10000; border-top: 2px solid #333; display: none;" data-testid="debug-log">
+        <div style="color: #ffff00; font-weight: bold; margin-bottom: 5px;">J-Stark Debug Log</div>
+        <div style="font-size: 10px; color: #888; margin-bottom: 10px;">Press Ctrl+Shift+D to toggle | Ctrl+Shift+C to clear</div>
+    </div>
+
+    <script>
+        // J-Stark Surgical Fix - Debug Log Controls
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+                event.preventDefault();
+                const debugLog = document.getElementById('debug-log');
+                if (debugLog) {
+                    debugLog.style.display = debugLog.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+            if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+                event.preventDefault();
+                const debugLog = document.getElementById('debug-log');
+                if (debugLog) {
+                    const header = debugLog.querySelector('div').outerHTML;
+                    const controls = debugLog.querySelectorAll('div')[1].outerHTML;
+                    debugLog.innerHTML = header + controls;
+                }
+            }
+        });
+    </script>
+
+<!-- Mobile Menu Handler - Must load last -->
+<script src="js/mobile-menu.js"></script>
+
+</body>
+</html>

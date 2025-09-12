@@ -1,0 +1,599 @@
+/**
+ * Slab Forms CSS
+ * Styling for simplified slab list architecture (PDF-compliant)
+ * ONE calculator → list flow with read-only slab entries
+ */
+
+/* Main slab container */
+.slab-service-entry-form {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.slab-entry-instructions {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.slab-entry-instructions p {
+    margin: 0;
+    color: #1565c0;
+    font-size: 14px;
+}
+
+/* Slabs container */
+.slabs-container {
+    margin: 20px 0;
+}
+
+/* Individual slab entry */
+.slab-entry {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.slab-entry:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.slab-entry.has-suggestion {
+    border-left: 4px solid #28a745;
+    background: #f8fff8;
+}
+
+/* Slab header */
+.slab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.slab-title {
+    font-weight: bold;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slab-remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.slab-remove-btn:hover {
+    background: #c82333;
+}
+
+.slab-remove-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Slab dimensions form */
+.slab-dimensions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.slab-dimension-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.slab-dimension-group label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.slab-dimension-input {
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.slab-dimension-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Suggestion display */
+.slab-suggestion {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 44px;
+}
+
+.suggestion-text {
+    color: #495057;
+    font-size: 14px;
+}
+
+.suggestion-text.has-suggestion {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.suggestion-loading {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.suggestion-error {
+    color: #dc3545;
+}
+
+/* Price input section */
+.slab-price-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.slab-price-group {
+    flex: 1;
+}
+
+.slab-price-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.slab-price-input-container {
+    position: relative;
+}
+
+.slab-price-input {
+    width: 100%;
+    padding: 10px 10px 10px 25px;
+    border: 2px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.slab-price-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.slab-price-input.required:invalid {
+    border-color: #dc3545;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* Use suggestion button */
+.use-suggestion-btn {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.use-suggestion-btn:hover:not(:disabled) {
+    background: #138496;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.use-suggestion-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Totals display */
+.slab-totals-display {
+    background: linear-gradient(145deg, #e8f5e9, #f0f9f1);
+    border: 2px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 18px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.total-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #28a745;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Add slab button */
+#add-slab-btn {
+    background: #6c757d;
+    border: 1px solid #6c757d;
+    color: white;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#add-slab-btn:hover {
+    background: #5a6268;
+    border-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* Add service button states */
+#add-concrete-service:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .slab-dimensions {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .slab-entry {
+        padding: 15px;
+    }
+    
+    .slab-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .slab-remove-btn {
+        align-self: flex-end;
+    }
+    
+    .slab-price-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .use-suggestion-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .slab-dimensions {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .slab-entry {
+        padding: 12px;
+    }
+    
+    .suggestion-text {
+        font-size: 12px;
+    }
+}
+
+/* Animation for new slabs */
+.slab-entry {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Validation styles */
+.slab-dimension-input.error {
+    border-color: #dc3545;
+}
+
+.slab-price-input.error {
+    border-color: #dc3545;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Loading state */
+.slab-entry.calculating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.calculating .suggestion-text::after {
+    content: '...';
+    animation: dots 1s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '...'; }
+    40% { content: '....'; }
+    60% { content: '.....'; }
+    80%, 100% { content: '......'; }
+}
+
+/* Focus styles for accessibility */
+.slab-remove-btn:focus,
+.use-suggestion-btn:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .slab-entry {
+        border-width: 3px;
+    }
+    
+    .slab-suggestion {
+        border-width: 2px;
+    }
+}
+
+/* ========================================
+   SIMPLIFIED SLAB LIST ARCHITECTURE
+   PDF-compliant: Calculator → List Flow
+   ======================================== */
+
+/* Slab List Container */
+.slab-list-container {
+    margin: 20px 0;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.slab-list-header {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.slab-list-header h5 {
+    margin: 0;
+    color: #007bff;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.slab-list-header i {
+    margin-right: 8px;
+}
+
+/* Individual Slab List Items */
+.slab-list {
+    margin-bottom: 15px;
+}
+
+.slab-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.slab-list-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.slab-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.slab-info {
+    flex: 1;
+    color: #333;
+    font-size: 14px;
+}
+
+.slab-info strong {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.slab-remove-btn {
+    background: transparent;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.slab-remove-btn:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.slab-remove-btn i {
+    font-size: 10px;
+}
+
+/* Slab Totals Display */
+.slab-totals-display {
+    border-top: 2px solid #28a745;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.total-label {
+    color: #333;
+}
+
+.total-value {
+    color: #28a745;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Responsive Design for Slab List */
+@media (max-width: 768px) {
+    .slab-list-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .slab-info {
+        text-align: center;
+    }
+    
+    .slab-remove-btn {
+        align-self: center;
+        width: auto;
+    }
+    
+    .total-row {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .slab-list-container {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .slab-list-item {
+        padding: 10px;
+    }
+    
+    .slab-info {
+        font-size: 13px;
+    }
+    
+    .total-row {
+        font-size: 14px;
+    }
+    
+    .total-value {
+        font-size: 16px;
+    }
+}
+
+/* Animation for new slab entries */
+.slab-list-item {
+    animation: fadeInSlide 0.3s ease-out;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Empty state */
+.slab-list-container:empty {
+    display: none;
+}
+
+/* Focus accessibility */
+.slab-remove-btn:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}

@@ -1,0 +1,347 @@
+/**
+ * Navigation & Form Visibility Fix - CSS
+ * Ensures critical form elements are always visible
+ */
+
+/* Force invoice creation view to be visible ONLY when active */
+#invoice-creation:not(.active) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+#invoice-creation.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* This rule is now handled below in the FIXED section */
+
+/* Ensure invoice form container is always visible */
+#invoice-creation .invoice-form-container {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Ensure estimate form container is always visible - CRITICAL FIX */
+#estimate-creation .invoice-form-container {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Ensure main invoice form is visible */
+#invoice-form {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Ensure main estimate form is visible - CRITICAL FIX */
+#estimate-form {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Ensure business type selector is visible */
+.business-selector {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.business-option {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+/* Ensure step indicators are visible */
+.step-indicators {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+/* Force concrete services section to be visible when active */
+#concrete-services {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#concrete-services.active {
+    display: block !important;
+}
+
+/* Force estimate services sections to be visible - CRITICAL FIX */
+#estimate-services-section {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#estimate-services-content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.estimate-concrete-services,
+.estimate-masonry-services {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Estimate slabs container visibility */
+#estimate-slabs-container,
+.estimate-slab-entry {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Force masonry services section visibility control */
+#masonry-services {
+    display: none;
+    visibility: hidden;
+}
+
+#masonry-services.active {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Ensure slab container and entries are visible */
+#slabs-container {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.slab-entry {
+    display: block !important;
+    visibility: visible !important;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.slab-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.slab-content {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Calculator elements visibility */
+.calculator-section,
+.calculator-inputs,
+.calculation-results {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.calculator-inputs .form-row {
+    display: flex !important;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.calculator-inputs .form-group {
+    flex: 1;
+    display: block !important;
+}
+
+/* Calculator input fields */
+input[id$="-length-ft"],
+input[id$="-width-ft"], 
+input[id$="-lift-height-ft"],
+#length-ft,
+#width-ft,
+#lift-height-ft {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+}
+
+/* Calculation results styling */
+.calculation-results {
+    background: #e8f5e8;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.result-row {
+    display: flex !important;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+.result-label {
+    font-weight: bold;
+}
+
+.result-value {
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Buttons visibility */
+#add-slab-btn,
+#add-concrete-service,
+#use-selected-price,
+#add-estimate-slab-btn,
+#add-estimate-concrete-service,
+button[data-testid="submit-invoice"],
+button[data-testid="submit-estimate"] {
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+/* Totals display */
+#slab-totals-display,
+#estimate-slab-totals-display,
+.slab-totals-display {
+    display: block !important;
+    visibility: visible !important;
+    background: #f0f8ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border: 2px solid #007bff;
+}
+
+.total-row {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.total-label {
+    color: #333;
+}
+
+.total-value {
+    color: #007bff;
+    font-size: 20px;
+}
+
+/* Form submission area */
+.form-actions {
+    display: flex !important;
+    visibility: visible !important;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px 0;
+    border-top: 1px solid #ddd;
+}
+
+/* Emergency visibility overrides */
+.view.active * {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* FIXED: Only show estimate-creation when explicitly active */
+#estimate-creation:not(.active) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+#estimate-creation.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    min-height: 100px !important;
+    background: white !important;
+}
+
+/* Force all estimate form elements to be visible */
+#estimate-creation * {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#estimate-creation .form-section,
+#estimate-creation .form-row,
+#estimate-creation .form-group {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Make sure required form elements don't have display: none */
+input[required],
+select[required],
+textarea[required] {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Price input styling */
+.input-with-currency {
+    display: flex !important;
+    align-items: center;
+}
+
+.currency-symbol {
+    display: inline-block !important;
+    padding: 8px 12px;
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    border-right: none;
+    border-radius: 0.25rem 0 0 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .calculator-inputs .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .slab-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* Debug helper - shows borders around major elements when debugging */
+body[data-debug="true"] .view,
+body[data-debug="true"] .invoice-form-container,
+body[data-debug="true"] #concrete-services,
+body[data-debug="true"] #slabs-container,
+body[data-debug="true"] .slab-entry {
+    border: 2px solid red !important;
+    margin: 2px !important;
+}
+
+/* Animation for better UX */
+.slab-entry {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
