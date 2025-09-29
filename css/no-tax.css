@@ -1,0 +1,107 @@
+/**
+ * No Tax CSS - Hides all tax-related UI elements
+ */
+
+/* Hide all tax rows and elements */
+#invoice-tax,
+#estimate-tax,
+.tax-row,
+.tax-line,
+.tax-amount,
+.tax-rate,
+.tax-label,
+.total-row:has(#invoice-tax),
+.total-row:has(#estimate-tax),
+[class*="tax-"],
+[id*="tax-"],
+[data-tax],
+*[class*="tax"]:not(.syntax):not(.context),
+*[id*="tax"]:not(.syntax):not(.context) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Specifically hide tax in totals section */
+.invoice-totals .total-row:nth-child(2),
+.estimate-totals .total-row:nth-child(2) {
+    display: none !important;
+}
+
+/* Hide any span or div containing "Tax" */
+span:contains("Tax"),
+div:contains("Tax"):not(:has(*)),
+td:contains("Tax"),
+th:contains("Tax"),
+label:contains("Tax") {
+    display: none !important;
+}
+
+/* Ensure grand total shows correctly without tax row */
+.invoice-totals,
+.estimate-totals {
+    & .total-row:last-child {
+        border-top: 2px solid #333;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-weight: bold;
+    }
+}
+
+/* Remove tax from PDF and print views */
+@media print {
+    #invoice-tax,
+    #estimate-tax,
+    .tax-row,
+    .total-row:has(#invoice-tax),
+    .total-row:has(#estimate-tax),
+    *[class*="tax"],
+    *[id*="tax"] {
+        display: none !important;
+    }
+}
+
+/* Override any inline styles that might show tax */
+[style*="display: block"]:has(#invoice-tax),
+[style*="display: block"]:has(#estimate-tax) {
+    display: none !important;
+}
+
+/* Ensure totals section looks correct without tax */
+.totals-section {
+    .total-row {
+        &:has(#invoice-tax),
+        &:has(#estimate-tax) {
+            display: none !important;
+            + .total-row {
+                margin-top: 10px;
+            }
+        }
+    }
+}
+
+/* Hide tax in any table */
+table {
+    tr:has(td:contains("Tax")),
+    tr:has(th:contains("Tax")) {
+        display: none !important;
+    }
+}
+
+/* Make sure the grand total is prominent */
+#invoice-grand-total,
+#estimate-grand-total {
+    font-size: 1.2em !important;
+    font-weight: bold !important;
+    color: #333 !important;
+}
+
+/* Hide tax percentage displays */
+*:contains("8.25%"),
+*:contains("0%"):contains("Tax") {
+    display: none !important;
+}
