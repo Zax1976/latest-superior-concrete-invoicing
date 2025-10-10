@@ -881,26 +881,18 @@
             }
         },
 
-        // Enhanced initialization for estimate creation view  
+        // Enhanced initialization for estimate creation view
         initializeEstimateCreationView: function() {
             try {
                 console.log('🎯 Initializing estimate creation view...');
-                
-                // Only reset estimate form if there are no services
-                // This preserves services when navigating via createNewEstimate
-                if (!window.InvoiceManager || !window.InvoiceManager.currentEstimate || 
-                    !window.InvoiceManager.currentEstimate.services || 
-                    window.InvoiceManager.currentEstimate.services.length === 0) {
-                    // Reset estimate form
-                    this.resetEstimateForm();
-                } else {
-                    console.log('📦 Preserving existing estimate services:', 
-                        window.InvoiceManager.currentEstimate.services.length);
-                }
-                
+
+                // Always reset estimate form to ensure fresh start for new estimates
+                // (Edit flow uses editEstimate() which loads the estimate after showing the view)
+                this.resetEstimateForm();
+
                 // Calculator removed - using simple service manager
                 console.log('✅ Simple service system ready');
-                
+
                 // Add automation markers
                 this.addAutomationMarkers('estimate-creation');
                 
@@ -1437,27 +1429,29 @@
                 if (form) {
                     form.reset();
                 }
-                
+
                 // Clear services list
                 this.clearServicesList();
-                
+
                 // Reset totals
                 this.updateInvoiceTotals();
-                
+
                 // Set current date
                 this.setCurrentDate();
-                
+
                 // Reset business type sections
                 this.handleBusinessTypeChange('');
-                
+
                 // Reset invoice manager
                 if (window.InvoiceManager) {
                     window.InvoiceManager.resetInvoice();
+                    // Explicitly clear currentInvoice to ensure fresh start
+                    window.InvoiceManager.currentInvoice = { services: [] };
                 }
-                
+
                 // Clear current invoice state
                 AppState.currentInvoice = null;
-                
+
             } catch (error) {
                 ErrorHandler.log(error, 'Reset Invoice Form');
             }
@@ -2713,31 +2707,36 @@
                 if (form) {
                     form.reset();
                 }
-                
+
                 // Clear services list
                 this.clearEstimateServicesList();
-                
+
                 // Reset totals
                 this.updateEstimateTotals();
-                
+
                 // Set current date
                 const today = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('estimate-date');
                 if (dateInput) {
                     dateInput.value = today;
                 }
-                
+
                 // Clear signature
                 this.clearSignature();
-                
+
                 // Reset estimate manager
                 if (window.EstimateManager) {
                     window.EstimateManager.resetEstimate();
                 }
-                
+
+                // Explicitly clear currentEstimate from InvoiceManager to ensure fresh start
+                if (window.InvoiceManager) {
+                    window.InvoiceManager.currentEstimate = { services: [] };
+                }
+
                 // Clear current estimate state
                 AppState.currentEstimate = null;
-                
+
             } catch (error) {
                 ErrorHandler.log(error, 'Reset Estimate Form');
             }

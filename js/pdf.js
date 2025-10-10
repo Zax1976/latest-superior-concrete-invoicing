@@ -790,7 +790,7 @@ Total: ${this.formatCurrency(invoice.subtotal)}
 ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
 
 Payment Terms:
-Payment is due within 30 days of invoice date.
+Full payment required at completion unless alternate terms are agreed in advance.
 Make checks payable to: ${businessInfo.name}
 Mail payments to: ${businessInfo.address}
 
@@ -1147,7 +1147,7 @@ Thank you for your business!
                 <div class="invoice-footer">
                     <div class="payment-terms">
                         <h4>Payment Terms</h4>
-                        <p>Payment is due within 30 days of invoice date.</p>
+                        <p>Full payment required at completion unless alternate terms are agreed in advance.</p>
                         <p>Make checks payable to: ${businessInfo.name}</p>
                         <p>Mail payments to: ${businessInfo.address}</p>
                         <p>For questions about this invoice, please contact us at ${businessInfo.phone}</p>

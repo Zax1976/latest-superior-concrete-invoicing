@@ -1713,7 +1713,7 @@ window.JStarkInvoicing = (function() {
                 <div class="invoice-footer">
                     <div class="payment-terms">
                         <h4>Payment Terms</h4>
-                        <p>Payment is due within 30 days of invoice date.</p>
+                        <p>Full payment required at completion unless alternate terms are agreed in advance.</p>
                         <p>Make checks payable to: ${businessInfo.name}</p>
                         <p>Mail payments to: ${businessInfo.address}</p>
                         <p>For questions about this invoice, please contact us at ${businessInfo.phone}</p>
